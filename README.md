@@ -129,6 +129,33 @@ select id, email from auth.users where email = 'voce@exemplo.com';
 Sem essa linha o login funciona, mas o painel responde "sem permissão" — é a
 allowlist fazendo o trabalho dela.
 
+## Contas de quem vota
+
+Cadastro por **nome de usuário e senha**, sem e-mail e sem confirmação: a pessoa
+escolhe um nome, cria a conta e já entra logada para votar.
+
+O caminho normal (`auth.signUp`) não serve aqui porque dispara e-mail de
+confirmação, e o SMTP embutido do Supabase tem limite baixo — com poucas pessoas
+entrando ao mesmo tempo a votação para com `email rate limit exceeded`. Em vez
+disso, `music_battle_signup` cria a conta já confirmada e a aplicação entra em
+seguida, então cadastrar e ficar logado são um passo só.
+
+O Supabase Auth exige um endereço, então cada nome vira
+`<nome>@duelo-musical.local`. O domínio é fixo e `.local` é reservado pela
+RFC 6762: nenhum cadastro pode produzir um e-mail que exista de verdade, o que
+impede alguém de criar "dono@gmail.com" e assumir uma conta real. O `@` também
+não entra no conjunto de caracteres aceitos.
+
+A função valida o formato do nome, o tamanho da senha e a duplicidade, e nunca
+escreve em `music_battle_admins` — não há como virar administrador por ela. O
+login aceita nome **ou** e-mail, porque as contas de administrador foram criadas
+por e-mail antes de o cadastro por nome existir.
+
+Uma coisa que ela não faz: limitar quantas contas alguém cria. O voto continua
+único por conta, garantido pelo índice do banco, mas uma pessoa determinada pode
+criar vários nomes. Para uma batalha entre conhecidos isso não pesa; se a
+votação crescer, vale colocar um limite por IP na frente.
+
 ## Upload
 
 | Arquivo | Bucket | Limite | Formatos |

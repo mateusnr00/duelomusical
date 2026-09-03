@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { loginEmailFor, normalizeUsername, usernameError } from "@/lib/auth-identity";
 
 export type AuthResult = { error: string } | { ok: true; message?: string };
 
@@ -16,7 +17,7 @@ function safeRedirect(raw: FormDataEntryValue | null): string {
 
 function readCredentials(formData: FormData) {
   return {
-    email: String(formData.get("email") ?? "").trim(),
+    identity: String(formData.get("identity") ?? "").trim(),
     password: String(formData.get("password") ?? ""),
     next: safeRedirect(formData.get("redirect")),
   };
@@ -26,34 +27,65 @@ export async function signIn(
   _prev: AuthResult | null,
   formData: FormData,
 ): Promise<AuthResult> {
-  const { email, password, next } = readCredentials(formData);
-  if (!email || !password) return { error: "Informe e-mail e senha." };
+  const { identity, password, next } = readCredentials(formData);
+  if (!identity || !password) return { error: "Informe seu nome e a senha." };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({
+    // Aceita nome de usuário ou e-mail: quem administra entrou por e-mail
+    // antes de o cadastro por nome existir.
+    email: loginEmailFor(identity),
+    password,
+  });
 
-  if (error) return { error: "E-mail ou senha incorretos." };
+  if (error) return { error: "Nome ou senha incorretos." };
   redirect(next);
 }
 
+/**
+ * Cadastro por nome, sem e-mail.
+ *
+ * Não usa `auth.signUp` de propósito: ele dispara e-mail de confirmação, e o
+ * SMTP embutido do projeto estoura o limite com poucas pessoas ("email rate
+ * limit exceeded"). A função no banco cria a conta já confirmada, e aqui a
+ * pessoa entra em seguida — cadastrar e ficar logado viram um passo só.
+ */
 export async function signUp(
   _prev: AuthResult | null,
   formData: FormData,
 ): Promise<AuthResult> {
-  const { email, password, next } = readCredentials(formData);
+  const { identity, password, next } = readCredentials(formData);
 
-  if (!email) return { error: "Informe seu e-mail." };
-  if (password.length < 8) return { error: "A senha precisa ter ao menos 8 caracteres." };
+  const username = normalizeUsername(identity);
+  const invalid = usernameError(username);
+  if (invalid) return { error: invalid };
+  if (password.length < 6) return { error: "A senha precisa ter ao menos 6 caracteres." };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
 
-  if (error) return { error: error.message };
+  const { error: signUpError } = await supabase.rpc("music_battle_signup", {
+    p_username: username,
+    p_password: password,
+  });
 
-  // Com confirmação de e-mail ligada no projeto, o cadastro não devolve sessão:
-  // avisamos em vez de mandar para a votação e deixar o voto falhar lá.
-  if (!data.session) {
-    return { ok: true, message: "Confira seu e-mail para confirmar o cadastro." };
+  if (signUpError) {
+    return { error: signUpError.message || "Não foi possível criar a conta." };
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: loginEmailFor(username),
+    password,
+  });
+
+  // A conta já existe neste ponto; só a sessão falhou. Dizer "não deu certo"
+  // faria a pessoa tentar de novo e esbarrar no nome já em uso, então o aviso
+  // diz o que realmente aconteceu — e carrega o motivo, que é o que permite
+  // diagnosticar se isso acontecer em produção.
+  if (signInError) {
+    return {
+      ok: true,
+      message: `Conta criada, mas a entrada automática falhou (${signInError.message}). Use "Entrar" com o nome ${username}.`,
+    };
   }
 
   redirect(next);

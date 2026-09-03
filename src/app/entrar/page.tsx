@@ -19,7 +19,9 @@ export default async function EntrarPage({ searchParams }: PageProps<"/entrar">)
         {mode === "signup" ? "Criar conta" : "Entrar"}
       </h1>
       <p className="mt-2 text-sm text-muted">
-        Sua conta serve para garantir um voto por pessoa em cada confronto.
+        {mode === "signup"
+          ? "Escolha um nome e uma senha. Não pedimos e-mail, e você já entra direto para votar."
+          : "Sua conta serve para garantir um voto por pessoa em cada confronto."}
       </p>
 
       <AuthForm mode={mode} redirectTo={redirectTo} />

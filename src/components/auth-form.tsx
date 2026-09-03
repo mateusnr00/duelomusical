@@ -29,21 +29,34 @@ export function AuthForm({
     <form action={formAction} className="mt-8 space-y-5">
       <input type="hidden" name="redirect" value={redirectTo} />
 
-      <Field label="E-mail" htmlFor="email">
+      <Field
+        // No login o campo aceita as duas formas, porque as contas de
+        // administrador foram criadas por e-mail antes do cadastro por nome.
+        label={mode === "signup" ? "Nome de usuário" : "Nome de usuário ou e-mail"}
+        htmlFor="identity"
+        hint={
+          mode === "signup"
+            ? "Sem e-mail. Espaços viram ponto: Maria Silva fica maria.silva."
+            : undefined
+        }
+      >
         <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
+          id="identity"
+          name="identity"
+          type="text"
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           required
-          placeholder="voce@exemplo.com"
+          placeholder={mode === "signup" ? "maria.silva" : "seu nome ou e-mail"}
         />
       </Field>
 
       <Field
         label="Senha"
         htmlFor="password"
-        hint={mode === "signup" ? "Ao menos 8 caracteres." : undefined}
+        hint={mode === "signup" ? "Ao menos 6 caracteres." : undefined}
       >
         <Input
           id="password"
@@ -51,7 +64,7 @@ export function AuthForm({
           type="password"
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
           required
-          minLength={mode === "signup" ? 8 : undefined}
+          minLength={mode === "signup" ? 6 : undefined}
         />
       </Field>
 
@@ -62,7 +75,7 @@ export function AuthForm({
         </p>
       )}
 
-      <Submit label={mode === "signup" ? "Criar conta" : "Entrar"} />
+      <Submit label={mode === "signup" ? "Criar conta e entrar" : "Entrar"} />
     </form>
   );
 }
