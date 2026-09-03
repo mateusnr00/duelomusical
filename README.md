@@ -143,6 +143,26 @@ declara — os dois se forjam renomeando o arquivo. Essa é a primeira barreira:
 bucket também tem lista de MIME e limite de tamanho, e é ele quem recusa um
 envio feito fora da interface.
 
+## Chaveamento
+
+**Desktop:** a chave inteira em cards, em três colunas — as duas semifinais à
+esquerda, a final centrada entre elas à direita, ligadas por linhas.
+
+As linhas são CSS, e não um SVG de coordenadas fixas, porque precisam continuar
+certas quando os cards mudam de altura. A coluna do meio repete a mesma
+estrutura das seções (um espaçador da altura exata do cabeçalho, depois a área
+dos cards), então `top-1/2` cai no centro dos cards por construção. Verificado
+no navegador: desvio de 0px entre cada linha e o centro do card que ela liga,
+nos três estados da batalha.
+
+**Mobile:** a chave aparece no topo em forma compacta — duas colunas, uma linha
+por música, vencedor destacado —, servindo de panorama. Ouvir e votar acontece
+nos cards logo abaixo, e tocar num confronto da chave leva até o card dele. O
+placar da chave segue a mesma regra de sigilo do resto: enquanto o resultado não
+pode aparecer, a linha mostra um traço no lugar do número.
+
+Nada ultrapassa a tela na horizontal em nenhuma das duas larguras.
+
 ## Player
 
 Player próprio, sem os controles nativos: botão redondo, barra fina e os tempos.

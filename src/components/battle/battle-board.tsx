@@ -1,6 +1,7 @@
 "use client";
 
 import { MatchPanel } from "./match-panel";
+import { CompactBracket } from "./compact-bracket";
 import { Champion } from "./champion";
 import { AudioProvider } from "@/components/player/audio-provider";
 import { ToastProvider } from "@/components/ui/toast";
@@ -55,14 +56,6 @@ function Connector() {
   );
 }
 
-function Arrow() {
-  return (
-    <p aria-hidden="true" className="py-6 text-center text-lg text-line-strong lg:hidden">
-      ↓
-    </p>
-  );
-}
-
 function FinalPlaceholder() {
   return (
     <section aria-label="Grande final" className="animate-rise">
@@ -110,9 +103,11 @@ export function BattleBoard({ view }: { view: BattleView }) {
   }
 
   const finalColumn = championEntry ? (
+    // A âncora acompanha a campeã: a chave compacta aponta para o confronto da
+    // final, e encerrada a batalha é esta tela que ocupa o lugar dele.
     // O recuo repõe o cabeçalho que os confrontos têm e a campeã não, para a
     // linha do chaveamento chegar no centro dela.
-    <div className="lg:pt-11">
+    <div id={final ? `confronto-${final.id}` : undefined} className="scroll-mt-6 lg:pt-11">
       <Champion entry={championEntry} votes={championVotes} percent={championPercent} />
     </div>
   ) : final ? (
@@ -147,19 +142,22 @@ export function BattleBoard({ view }: { view: BattleView }) {
           )}
         </header>
 
-        {/* Desktop: chaveamento em três colunas, com a final centrada entre as
-            semifinais. Mobile: a mesma sequência empilhada, sem rolagem lateral. */}
-        <div className="lg:grid lg:grid-cols-[minmax(0,1.15fr)_4rem_minmax(0,1fr)] lg:items-stretch">
+        {/* No mobile o chaveamento aparece primeiro em forma compacta, como
+            panorama, e os cards de ouvir e votar vêm abaixo. No desktop cabe a
+            chave inteira em cards, em três colunas com a final centrada. */}
+        <CompactBracket view={view} />
+
+        <div className="mt-12 lg:mt-0 lg:grid lg:grid-cols-[minmax(0,1.15fr)_4rem_minmax(0,1fr)] lg:items-stretch">
           <div className="grid gap-y-10 lg:grid-rows-2">
             {panel(semi1)}
-            <Arrow />
             {panel(semi2)}
           </div>
 
           <Connector />
 
-          <Arrow />
-          <div className="lg:self-center lg:pl-2">{finalColumn}</div>
+          {/* No mobile a final vem depois das semifinais e precisa do mesmo
+              respiro que separa uma da outra; no desktop ela é uma coluna. */}
+          <div className="mt-10 lg:mt-0 lg:self-center lg:pl-2">{finalColumn}</div>
         </div>
       </AudioProvider>
     </ToastProvider>

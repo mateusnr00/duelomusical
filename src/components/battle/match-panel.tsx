@@ -99,11 +99,13 @@ export function MatchPanel({
 
   return (
     <section
+      id={`confronto-${match.id}`}
       aria-label={matchLabel(match.round, match.position)}
       // No desktop a seção ocupa a linha inteira do grid e centra o conteúdo:
       // é isso que faz o centro dos cards cair perto de onde a linha do
       // chaveamento sai, do lado.
-      className="animate-rise lg:flex lg:h-full lg:flex-col"
+      // `scroll-mt` dá respiro quando a chave compacta rola até aqui.
+      className="animate-rise scroll-mt-6 lg:flex lg:h-full lg:flex-col"
     >
       {/* A altura fixa vale só a partir de `lg`, onde o conector do chaveamento
           a usa para saber onde começam os cards. No mobile não há conector e o
