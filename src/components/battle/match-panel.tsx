@@ -72,6 +72,9 @@ export function MatchPanel({
     });
   }
 
+  // Uma capa em qualquer um dos dois já justifica a área nos dois cards.
+  const showCover = Boolean(entryA?.cover_url || entryB?.cover_url);
+
   function cardFor(entry: Entry | null, votes: number | null, percent: number | null) {
     if (!entry) {
       return (
@@ -90,6 +93,7 @@ export function MatchPanel({
         isMyVote={match.my_vote_entry_id === entry.id}
         isWinner={match.winner_id === entry.id}
         compact={compact}
+        showCover={showCover}
         onVote={votingOpen ? () => setConfirming(entry) : undefined}
         voteDisabled={pending || !signedIn}
         voteLabel={signedIn ? "Votar nessa música" : "Entre para votar"}

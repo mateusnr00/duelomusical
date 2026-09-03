@@ -18,12 +18,14 @@ function Row({
   isWinner,
   decided,
   isMyVote,
+  showCover,
 }: {
   entry: Entry | null;
   votes: number | null;
   isWinner: boolean;
   decided: boolean;
   isMyVote: boolean;
+  showCover: boolean;
 }) {
   // Quando o confronto acabou, quem perdeu recua para o segundo plano — é o
   // que faz o vencedor saltar aos olhos sem precisar de cor extra.
@@ -38,9 +40,11 @@ function Row({
         }`}
       />
 
-      <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-[2px]">
-        <Cover src={entry?.cover_url ?? null} alt="" sizes="24px" />
-      </span>
+      {showCover && (
+        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-[2px]">
+          <Cover src={entry?.cover_url ?? null} alt="" sizes="24px" />
+        </span>
+      )}
 
       <span
         className={`min-w-0 flex-1 truncate text-[0.72rem] ${
@@ -80,6 +84,8 @@ function CompactMatch({
   const entryA = view.entries.find((e) => e.id === match.entry_a_id) ?? null;
   const entryB = view.entries.find((e) => e.id === match.entry_b_id) ?? null;
   const decided = match.winner_id !== null;
+  // Mesma regra dos cards: sem capa nenhuma no confronto, nada de miniatura.
+  const showCover = Boolean(entryA?.cover_url || entryB?.cover_url);
 
   // O placar segue a mesma regra do card: enquanto o resultado não pode
   // aparecer, os votos chegam nulos do banco e a linha mostra um traço.
@@ -100,6 +106,7 @@ function CompactMatch({
         isWinner={match.winner_id === entryA?.id}
         decided={decided}
         isMyVote={match.my_vote_entry_id === entryA?.id}
+        showCover={showCover}
       />
       <Row
         entry={entryB}
@@ -107,6 +114,7 @@ function CompactMatch({
         isWinner={match.winner_id === entryB?.id}
         decided={decided}
         isMyVote={match.my_vote_entry_id === entryB?.id}
+        showCover={showCover}
       />
     </Link>
   );

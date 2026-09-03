@@ -42,9 +42,13 @@ export function Champion({
       </p>
       <h2 className="eyebrow mt-3 text-accent">Música campeã</h2>
 
-      <div className="relative mx-auto mt-6 aspect-square w-full max-w-56 overflow-hidden rounded-sm">
-        <Cover src={entry.cover_url} alt={`Capa de ${entry.name}`} sizes="14rem" priority />
-      </div>
+      {/* Sem capa cadastrada a área não aparece: um quadrado vazio grande
+          rouba justamente o destaque que esta tela existe para dar. */}
+      {entry.cover_url && (
+        <div className="relative mx-auto mt-6 aspect-square w-full max-w-56 overflow-hidden rounded-sm">
+          <Cover src={entry.cover_url} alt={`Capa de ${entry.name}`} sizes="14rem" priority />
+        </div>
+      )}
 
       <h3 className="mt-6 text-2xl leading-tight font-medium">{entry.name}</h3>
       <p className="mt-1 text-sm text-muted">{entry.artist || "Artista não informado"}</p>

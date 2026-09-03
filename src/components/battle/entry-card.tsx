@@ -24,6 +24,7 @@ export function EntryCard({
   voteDisabled,
   voteLabel,
   compact = false,
+  showCover = true,
 }: {
   entry: Entry;
   /**
@@ -41,24 +42,37 @@ export function EntryCard({
   voteDisabled?: boolean;
   voteLabel?: string;
   compact?: boolean;
+  /**
+   * Se a área de capa aparece. Quando nenhuma das duas músicas do confronto
+   * tem capa, ela some por completo em vez de virar um bloco vazio ocupando
+   * metade do card. A decisão é por confronto, e não por música, para os dois
+   * cards do "vs" continuarem com o mesmo desenho.
+   */
+  showCover?: boolean;
 }) {
+  const winnerBadge = (
+    <span className="rounded-sm bg-accent px-2 py-1 text-[0.6rem] font-medium tracking-[0.16em] text-void uppercase">
+      Venceu
+    </span>
+  );
+
   return (
     <article
       className={`flex h-full flex-col overflow-hidden rounded-sm border bg-surface transition-colors ${
         isWinner ? "border-accent/60" : "border-line"
       }`}
     >
-      <div className={`relative w-full ${compact ? "aspect-[16/7]" : "aspect-[16/9]"}`}>
-        <Cover src={entry.cover_url} alt={`Capa de ${entry.name}`} />
-        {isWinner && (
-          <span className="absolute left-3 top-3 rounded-sm bg-accent px-2 py-1 text-[0.6rem] font-medium uppercase tracking-[0.16em] text-void">
-            Venceu
-          </span>
-        )}
-      </div>
+      {showCover && (
+        <div className={`relative w-full ${compact ? "aspect-[16/7]" : "aspect-[16/9]"}`}>
+          <Cover src={entry.cover_url} alt={`Capa de ${entry.name}`} />
+          {isWinner && <span className="absolute top-3 left-3">{winnerBadge}</span>}
+        </div>
+      )}
 
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div>
+          {/* Sem capa não há onde sobrepor o selo, então ele vem antes do nome. */}
+          {isWinner && !showCover && <p className="mb-2">{winnerBadge}</p>}
           <h3 className="text-base leading-tight font-medium">{entry.name}</h3>
           <p className="mt-1 text-sm text-muted">{entry.artist || "Artista não informado"}</p>
         </div>
