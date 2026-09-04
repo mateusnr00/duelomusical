@@ -20,16 +20,36 @@ describe("nome de usuário", () => {
     }
   });
 
-  it("recusa nome curto, vazio ou com caractere fora do conjunto", () => {
-    expect(usernameError("")).toMatch(/Escolha um nome/);
-    expect(usernameError("ab")).toMatch(/3 a 30/);
-    expect(usernameError("a".repeat(31))).toMatch(/3 a 30/);
-    expect(usernameError(".comeca.com.ponto")).toMatch(/3 a 30/);
-    expect(usernameError("com espaco")).toMatch(/3 a 30/);
+  it("aproveita o que a pessoa digitou em vez de recusar", () => {
+    // Era o bug: qualquer caractere fora do conjunto virava erro, e digitar o
+    // próprio e-mail — o hábito mais comum — nunca deixava criar conta.
+    expect(normalizeUsername("mateusnr10@gmail.com")).toBe("mateusnr10");
+    expect(normalizeUsername("Mateus!")).toBe("mateus");
+    expect(normalizeUsername("ana+teste")).toBe("ana.teste");
+    expect(normalizeUsername("José D'Ávila")).toBe("jose.d.avila");
+    expect(normalizeUsername("ana..maria")).toBe("ana.maria");
+    expect(normalizeUsername("...bruno...")).toBe("bruno");
+
+    for (const digitado of ["mateusnr10@gmail.com", "Mateus!", "ana+teste", "José D'Ávila"]) {
+      expect(usernameError(normalizeUsername(digitado))).toBeNull();
+    }
   });
 
-  it("recusa nome com @, que é o que impede assumir um e-mail de verdade", () => {
-    expect(usernameError(normalizeUsername("mateusnr08@gmail.com"))).toMatch(/3 a 30/);
+  it("corta em 30 caracteres sem terminar em separador", () => {
+    const longo = normalizeUsername("a".repeat(28) + " bc");
+    expect(longo.length).toBeLessThanOrEqual(30);
+    expect(longo.endsWith(".")).toBe(false);
+  });
+
+  it("só recusa quando não sobra nome utilizável", () => {
+    expect(usernameError(normalizeUsername(""))).toMatch(/Escolha um nome/);
+    expect(usernameError(normalizeUsername("!!!"))).toMatch(/Escolha um nome/);
+    expect(usernameError(normalizeUsername("zé"))).toMatch(/ao menos 3/);
+  });
+
+  it("o nome nunca carrega @, então não vira um e-mail de verdade", () => {
+    expect(normalizeUsername("mateusnr08@gmail.com")).not.toContain("@");
+    expect(loginEmailFor("mateusnr08")).toBe(`mateusnr08@${VOTER_EMAIL_DOMAIN}`);
   });
 });
 

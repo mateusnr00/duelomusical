@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { signIn, signUp, type AuthResult } from "@/app/entrar/actions";
 import { Button } from "@/components/ui/button";
 import { Field, FormError, Input } from "@/components/ui/field";
+import { normalizeUsername } from "@/lib/auth-identity";
 
 function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -24,6 +25,13 @@ export function AuthForm({
 }) {
   const action = mode === "signup" ? signUp : signIn;
   const [state, formAction] = useActionState<AuthResult | null, FormData>(action, null);
+  const [digitado, setDigitado] = useState("");
+
+  // O nome é ajustado antes de virar conta (acento sai, espaço vira ponto, o
+  // que vem depois do "@" é descartado). Mostrar o resultado enquanto a pessoa
+  // digita evita a surpresa de se cadastrar com um nome diferente do que leu.
+  const nomeFinal = mode === "signup" ? normalizeUsername(digitado) : "";
+  const mostrarPreview = nomeFinal.length > 0 && nomeFinal !== digitado.trim();
 
   return (
     <form action={formAction} className="mt-8 space-y-5">
@@ -36,7 +44,9 @@ export function AuthForm({
         htmlFor="identity"
         hint={
           mode === "signup"
-            ? "Sem e-mail. Espaços viram ponto: Maria Silva fica maria.silva."
+            ? mostrarPreview
+              ? `Você vai entrar como ${nomeFinal}`
+              : "Sem e-mail. Pode usar letras, números, ponto, hífen ou sublinhado."
             : undefined
         }
       >
@@ -50,6 +60,7 @@ export function AuthForm({
           spellCheck={false}
           required
           placeholder={mode === "signup" ? "maria.silva" : "seu nome ou e-mail"}
+          onChange={(event) => setDigitado(event.target.value)}
         />
       </Field>
 

@@ -2,7 +2,13 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { loginEmailFor, normalizeUsername, usernameError } from "@/lib/auth-identity";
+import {
+  VOTER_EMAIL_DOMAIN,
+  loginEmailFor,
+  looksLikeEmail,
+  normalizeUsername,
+  usernameError,
+} from "@/lib/auth-identity";
 
 export type AuthResult = { error: string } | { ok: true; message?: string };
 
@@ -31,15 +37,28 @@ export async function signIn(
   if (!identity || !password) return { error: "Informe seu nome e a senha." };
 
   const supabase = await createClient();
+
+  // Primeira tentativa: o que a pessoa digitou. Com "@" é um e-mail de
+  // verdade, que é como as contas de administrador entram.
   const { error } = await supabase.auth.signInWithPassword({
-    // Aceita nome de usuário ou e-mail: quem administra entrou por e-mail
-    // antes de o cadastro por nome existir.
     email: loginEmailFor(identity),
     password,
   });
 
-  if (error) return { error: "Nome ou senha incorretos." };
-  redirect(next);
+  if (!error) redirect(next);
+
+  // Quem se cadastrou digitando o próprio e-mail ficou com a conta no nome
+  // antes do "@" (maria@gmail.com virou "maria"). Sem esta segunda tentativa
+  // essa pessoa se cadastraria e depois não conseguiria voltar.
+  if (looksLikeEmail(identity)) {
+    const { error: erroPorNome } = await supabase.auth.signInWithPassword({
+      email: `${normalizeUsername(identity)}@${VOTER_EMAIL_DOMAIN}`,
+      password,
+    });
+    if (!erroPorNome) redirect(next);
+  }
+
+  return { error: "Nome ou senha incorretos." };
 }
 
 /**

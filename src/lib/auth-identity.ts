@@ -12,24 +12,38 @@ export const VOTER_EMAIL_DOMAIN = "duelo-musical.local";
 export const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,29}$/;
 
 /**
- * Deixa o que a pessoa digitou no formato aceito: sem acento, sem maiúscula,
- * e espaços viram ponto — "Mateus Rocha" vira "mateus.rocha". É conveniência
- * de interface; quem recusa de fato é a função no banco, que só aceita o
- * formato final.
+ * Transforma o que a pessoa digitou num nome válido, em vez de recusar.
+ *
+ * Recusar era o erro da primeira versão: quem digitava o próprio e-mail por
+ * hábito, ou um nome com apóstrofo ou "+", só via mensagem de erro e não
+ * conseguia se cadastrar. Aqui tudo que está fora do conjunto permitido vira
+ * separador e o resto é aproveitado — "José D\'Ávila" vira "jose.d.avila",
+ * "maria@gmail.com" vira "maria".
  */
 export function normalizeUsername(raw: string): string {
-  return raw
+  const semDominio = raw.split("@")[0] ?? "";
+
+  return semDominio
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .trim()
     .toLowerCase()
-    .replace(/\s+/g, ".");
+    // Tudo que não é letra, número ou separador vira ponto.
+    .replace(/[^a-z0-9._-]+/g, ".")
+    // Separadores repetidos viram um só: "ana..maria" fica "ana.maria".
+    .replace(/([._-])[._-]+/g, "$1")
+    // Nome não começa nem termina em separador.
+    .replace(/^[._-]+|[._-]+$/g, "")
+    .slice(0, 30)
+    .replace(/[._-]+$/g, "");
 }
 
 export function usernameError(username: string): string | null {
   if (!username) return "Escolha um nome de usuário.";
+  if (username.length < 3) {
+    return "O nome precisa ter ao menos 3 letras ou números.";
+  }
   if (!USERNAME_PATTERN.test(username)) {
-    return "Use de 3 a 30 caracteres: letras, números, ponto, hífen ou sublinhado.";
+    return "Use letras, números, ponto, hífen ou sublinhado.";
   }
   return null;
 }
