@@ -68,3 +68,42 @@ describe("endereço usado no login", () => {
     expect(VOTER_EMAIL_DOMAIN.endsWith(".local")).toBe(true);
   });
 });
+
+describe("cadastrar e depois entrar chegam na mesma conta", () => {
+  // A regra que faz a senha funcionar no login não é a senha em si: é o nome
+  // resolver para a mesma conta nas duas telas. Se divergir, a pessoa cria a
+  // conta e depois não consegue voltar.
+  const contaCriadaPor = (digitado: string) =>
+    `${normalizeUsername(digitado)}@${VOTER_EMAIL_DOMAIN}`;
+
+  const contaProcuradaNoLogin = (digitado: string) => {
+    const primeira = loginEmailFor(digitado);
+    // O login tenta o literal e, se o texto tem "@", cai para a forma por nome.
+    return looksLikeEmail(digitado) ? contaCriadaPor(digitado) : primeira;
+  };
+
+  const digitados = [
+    "mateus",
+    "Mateus Rocha",
+    "mateus rocha",
+    "Mateus  Rocha",
+    "MATEUS.ROCHA",
+    "José D'Ávila",
+    "Mateus!",
+    "ana+teste",
+    "maria@gmail.com",
+  ];
+
+  for (const digitado of digitados) {
+    it(`"${digitado}"`, () => {
+      expect(contaProcuradaNoLogin(digitado)).toBe(contaCriadaPor(digitado));
+      expect(usernameError(normalizeUsername(digitado))).toBeNull();
+    });
+  }
+
+  it("variações de como a pessoa escreve o mesmo nome caem na mesma conta", () => {
+    const mesma = ["Mateus Rocha", "mateus rocha", "MATEUS  ROCHA", "mateus.rocha"];
+    const contas = new Set(mesma.map(contaCriadaPor));
+    expect(contas.size).toBe(1);
+  });
+});

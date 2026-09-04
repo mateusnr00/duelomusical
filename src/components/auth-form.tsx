@@ -38,15 +38,13 @@ export function AuthForm({
       <input type="hidden" name="redirect" value={redirectTo} />
 
       <Field
-        // No login o campo aceita as duas formas, porque as contas de
-        // administrador foram criadas por e-mail antes do cadastro por nome.
-        label={mode === "signup" ? "Nome de usuário" : "Nome de usuário ou e-mail"}
+        label="Usuário"
         htmlFor="identity"
         hint={
           mode === "signup"
             ? mostrarPreview
               ? `Você vai entrar como ${nomeFinal}`
-              : "Sem e-mail. Pode usar letras, números, ponto, hífen ou sublinhado."
+              : "Letras, números, ponto, hífen ou sublinhado."
             : undefined
         }
       >
@@ -59,7 +57,7 @@ export function AuthForm({
           autoCorrect="off"
           spellCheck={false}
           required
-          placeholder={mode === "signup" ? "maria.silva" : "seu nome ou e-mail"}
+          placeholder="maria.silva"
           onChange={(event) => setDigitado(event.target.value)}
         />
       </Field>

@@ -34,7 +34,7 @@ export async function signIn(
   formData: FormData,
 ): Promise<AuthResult> {
   const { identity, password, next } = readCredentials(formData);
-  if (!identity || !password) return { error: "Informe seu nome e a senha." };
+  if (!identity || !password) return { error: "Informe o usuário e a senha." };
 
   const supabase = await createClient();
 
@@ -58,7 +58,12 @@ export async function signIn(
     if (!erroPorNome) redirect(next);
   }
 
-  return { error: "Nome ou senha incorretos." };
+  // Dizer qual conta foi tentada é o que transforma "deu erro" em algo
+  // resolvível: quem se cadastrou como "mateus.rocha" e digitou "mateus" vê
+  // na hora que o nome não é o mesmo.
+  return {
+    error: `Não foi possível entrar como ${normalizeUsername(identity)}. Confira o usuário e a senha.`,
+  };
 }
 
 /**

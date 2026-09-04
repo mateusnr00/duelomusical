@@ -9,7 +9,7 @@ export default function AdminLoginPage() {
       <p className="eyebrow">Duelo Musical</p>
       <h1 className="mt-3 text-2xl font-medium">Painel</h1>
       <p className="mt-2 text-sm text-muted">
-        Acesso restrito a administradores da batalha. Entre com o e-mail cadastrado.
+        Acesso restrito a administradores da batalha.
       </p>
       <AuthForm mode="signin" redirectTo="/admin/batalhas" />
     </main>
